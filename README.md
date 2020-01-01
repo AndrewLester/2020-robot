@@ -51,7 +51,7 @@ In the `tests` folder there is another requirements file that needs to be run. T
 
 Entry points allow us to add sub-commands to the overarching RobotPY framework. To load them, move to the root directory, activate your virtual environment and run
 
-	pip install .
+	pip install -e .
 
 This will set up the entry points that we put in place to facilitate off-robot functions of our code. So far, we use entry points for:
 * Generating motion profile trajectories (generate)

@@ -37,37 +37,6 @@ trajectories = {
 }
 
 
-def load_trajectories():
-    """
-    Either generate and write trajectories if in a sim or read them if on the robot.
-    """
-    try:
-        with open(PICKLE_FILE, 'rb') as f:
-            generated_trajectories = pickle.load(f)
-    except FileNotFoundError:
-        generated_trajectories = {}
-
-    return generated_trajectories
-
-
-def _write_trajectories(trajectories):
-    """
-    Write trajectories dictionary to a file.
-    :param trajectories: The trajectory dict to write.
-    """
-    with open(PICKLE_FILE, 'wb') as f:
-        pickle.dump(trajectories, f)
-
-    # if wpilib.RobotBase.isSimulation():
-    #     from pyfrc.sim import get_user_renderer
-    #
-    #     renderer = get_user_renderer()
-    #     if renderer:
-    #         renderer.draw_pathfinder_trajectory(modifier.getLeftTrajectory(), '#0000ff', offset=(-0.9, 0))
-    #         renderer.draw_pathfinder_trajectory(modifier.source, '#00ff00', show_dt=True)
-    #         renderer.draw_pathfinder_trajectory(modifier.getRightTrajectory(), '#0000ff', offset=(0.9, 0))
-
-
 @robotpy_entry_point(name='TrajectoryGenerator')
 def generate_trajectories(options, robot_class):
     """
@@ -98,5 +67,7 @@ def generate_trajectories(options, robot_class):
         )
         print('Done')
 
-    _write_trajectories(generated_trajectories)
+    with open(PICKLE_FILE, 'wb') as f:
+        pickle.dump(generated_trajectories, f)
+
     print('Finished.')
