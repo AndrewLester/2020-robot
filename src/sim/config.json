@@ -9,10 +9,14 @@
         }
     },
     "encoder": {
-        "0": "Front Left Turn Encoder",
-        "1": "Front Right Turn Encoder",
-        "2": "Rear Left Turn Encoder",
-        "3": "Rear Right Turn Encoder"
+        "0": "Front Left Drive Encoder",
+        "1": "Front Left Turn Encoder",
+        "2": "Front Right Drive Encoder",
+        "3": "Front Right Turn Encoder",
+        "4": "Rear Left Drive Encoder",
+        "5": "Rear Left Turn Encoder",
+        "6": "Rear Right Drive Encoder",
+        "7": "Rear Right Turn Encoder"
     },
     "pwm": {
         "4": "Front Left Turn Motor",

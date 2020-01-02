@@ -3,9 +3,11 @@ from typing import Tuple
 
 import pathfinder as pf
 import wpilib
+from wpilib.geometry import Pose2d, Rotation2d
 from magicbot import tunable
 
 from components.drive import SwerveDrive, SwerveModule
+from components.tracking import Odometry
 
 
 class Follower:
@@ -16,6 +18,7 @@ class Follower:
     KI = tunable(0)
     KD = tunable(0)
 
+    odometry: Odometry
     swerve_drive: SwerveDrive
     modules: Tuple[SwerveModule]
 
@@ -33,23 +36,31 @@ class Follower:
         return generated_trajectories
 
     def setup(self):
-        self.followers = [pf.followers.EncoderFollower(None) for _ in range(4)]
+        self.followers = [pf.followers.DistanceFollower(None) for _ in range(4)]
 
-    def configureEncoders(self):
-        follower: pf.followers.EncoderFollower
-        for i, follower in enumerate(self.followers):
-            follower.configureEncoder(self.modules[i].drive_encoder.get(),
-                                      self.TICKS_PER_REV,
-                                      self.WHEEL_DIAMETER)
+    # Using a DistanceFollower with Odometry now
+    # def configureEncoders(self):
+    #     follower: pf.followers.DistanceFollower
+    #     for i, follower in enumerate(self.followers):
+    #         follower.configureEncoder(self.modules[i].drive_encoder.get(),
+    #                                   self.TICKS_PER_REV,
+    #                                   self.WHEEL_DIAMETER)
 
     def configurePIDVA(self):
-        for i, follower in enumerate(self.followers):
-            module = self.modules[i]
+        for module, follower in zip(self.modules, self.followers):
             follower.configurePIDVA(self.KP, self.KI, self.KD, module.config.KV, module.config.KA)
 
     def follow_trajectory(self, trajectory_name):
-        self.configureEncoders()
+        # self.configureEncoders()
         self.configurePIDVA()
 
     def execute(self):
-        pass
+        module: SwerveModule
+        follower: pf.followers.DistanceFollower
+        for module, follower in zip(self.modules, self.followers):
+            output = follower.calculate(Pose2d(module.offset, Rotation2d()).relativeTo(self.odometry.current_pose))
+            heading = pf.r2d(follower.getHeading())
+
+            # module.percent = output
+            print(output)
+            # module.angle = heading

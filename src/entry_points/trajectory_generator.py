@@ -6,12 +6,12 @@ from . import robotpy_entry_point
 import math
 
 
-WHEELBASE_WIDTH = 1.83  # Units: ft
+WHEELBASE_WIDTH = 0.557784  # Units: meters
 TRAJECTORY_DIRECTORY = 'trajectories'
 PICKLE_FILE = os.path.join(os.path.dirname(sys.modules['__main__'].__file__), TRAJECTORY_DIRECTORY, 'trajectories.pickle')
-MAX_GENERATION_VELOCITY = 3.4  # Units: ft/s
-MAX_GENERATION_ACCELERATION = 8.5  # Units: ft/s^2
-MAX_GENERATION_JERK = 15  # Units: ft/s^3
+MAX_GENERATION_VELOCITY = 1.03632  # Units: m/s
+MAX_GENERATION_ACCELERATION = 2.5908  # Units: m/s^2
+MAX_GENERATION_JERK = 4.57200  # Units: m/s^3
 
 trajectories = {
     "charge": [
