@@ -6,10 +6,7 @@ from typing import List, Tuple
 import wpilib
 from ctre import WPI_TalonSRX
 from magicbot import will_reset_to
-from networktables import NetworkTables
-from networktables.entry import NetworkTableEntry
 from networktables.util import _NtProperty
-from ntcore.value import Value
 from pathfinder import boundHalfDegrees
 from wpilib.geometry import Rotation2d, Translation2d
 from wpilib.kinematics import ChassisSpeeds
@@ -31,8 +28,6 @@ class SwerveModuleConfig:
     KD_TURN: float
 
     KEY_PREFIX = '/robot/swerve_module_{}/constants/'
-    # We are using a float factory here because all of the constants should be floats
-    VALUE_CREATOR = Value.getFactory(0.0)
 
     def __init__(
             self, module_num: int, KS: float, KV: float, KA: float,
@@ -43,8 +38,6 @@ class SwerveModuleConfig:
         self.KS = KS
         self.KV = KV
         self.KA = KA
-
-        self.table = NetworkTables.getTable('/')
 
         self.KP_DRIVE = self._ntvariable(f'{self.KEY_PREFIX}kp_drive', KP_DRIVE)
         self.KI_DRIVE = self._ntvariable(f'{self.KEY_PREFIX}ki_drive', KI_DRIVE)
