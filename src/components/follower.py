@@ -6,7 +6,7 @@ import wpilib
 from wpilib.geometry import Pose2d, Rotation2d
 from magicbot import tunable
 
-from components.drive import SwerveDrive, SwerveModule
+from components.drive import SwerveDrive, SwerveModule, SwerveModuleList
 from components.tracking import Odometry
 
 
@@ -20,12 +20,16 @@ class Follower:
 
     odometry: Odometry
     swerve_drive: SwerveDrive
-    modules: Tuple[SwerveModule]
+    modules: SwerveModuleList
 
-    @staticmethod
-    def load_trajectories(file_name):
+    def setup(self):
+        self.followers = [pf.followers.DistanceFollower(None) for _ in range(4)]
+        self.current_trajectory = None
+
+    def load_trajectories(self, file_name):
         """
-        Either generate and write trajectories if in a sim or read them if on the robot.
+        Load trajectories from a file and store them in the follower
+        :param file_name: The file to read trajectories from
         """
         try:
             with open(file_name, 'rb') as f:
@@ -33,10 +37,7 @@ class Follower:
         except FileNotFoundError:
             generated_trajectories = {}
 
-        return generated_trajectories
-
-    def setup(self):
-        self.followers = [pf.followers.DistanceFollower(None) for _ in range(4)]
+        self.generated_trajectories = generated_trajectories
 
     # Using a DistanceFollower with Odometry now
     # def configureEncoders(self):
@@ -51,10 +52,26 @@ class Follower:
             follower.configurePIDVA(self.KP, self.KI, self.KD, module.config.KV, module.config.KA)
 
     def follow_trajectory(self, trajectory_name):
+        self.current_trajectory = self.generated_trajectories[trajectory_name]
+
         # self.configureEncoders()
         self.configurePIDVA()
+        for follower in self.followers:
+            follower.reset()
+            follower.setTrajectory(self.current_trajectory)
 
     def execute(self):
+        if self.current_trajectory is None:
+            return
+
+        # If all the followers are finished, stop executing
+        for follower in self.followers:
+            if not follower.finished:
+                break
+        else:
+            self.current_trajectory = None
+            return
+
         module: SwerveModule
         follower: pf.followers.DistanceFollower
         for module, follower in zip(self.modules, self.followers):

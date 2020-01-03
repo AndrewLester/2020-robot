@@ -28,6 +28,11 @@ class PhysicsEngine:
             Translation2d(-0.5, -0.5)
         )
 
+        self.fl_turn_encoder = 0
+        self.fr_turn_encoder = 0
+        self.rl_turn_encoder = 0
+        self.rr_turn_encoder = 0
+
         self.odometry = SwerveDriveOdometry(self.kinematics, Rotation2d(self.physics_controller.angle))
 
     def update_sim(self, hal_data, now, tm_diff):
@@ -52,10 +57,15 @@ class PhysicsEngine:
         #     print(f'{i}: {encoder["config"]["ASource_Channel"]} {encoder["config"]["BSource_Channel"]}')
 
         # print('**********')
-        hal_data['encoder'][1]['count'] += int(fl_turn_motor)
-        hal_data['encoder'][3]['count'] += int(fr_turn_motor)
-        hal_data['encoder'][5]['count'] += int(rl_turn_motor)
-        hal_data['encoder'][7]['count'] += int(rr_turn_motor)
+        self.fl_turn_encoder += fl_turn_motor * 100 * tm_diff
+        self.fr_turn_encoder += fr_turn_motor * 100 * tm_diff
+        self.rl_turn_encoder += rl_turn_motor * 100 * tm_diff
+        self.rr_turn_encoder += rr_turn_motor * 100 * tm_diff
+
+        hal_data['encoder'][1]['count'] = int(self.fl_turn_encoder)
+        hal_data['encoder'][3]['count'] = int(self.fr_turn_encoder)
+        hal_data['encoder'][5]['count'] = int(self.rl_turn_encoder)
+        hal_data['encoder'][7]['count'] = int(self.rr_turn_encoder)
 
         # 5 Corresponds to speed=5 in swerve_drivetrain creation
 

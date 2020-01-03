@@ -41,6 +41,7 @@ class Robot(magicbot.MagicRobot):
 
     odometry: Odometry
     swerve_drive: SwerveDrive
+    follower: Follower
 
     def createObjects(self):
         self.navx = navx.AHRS.create_spi()
@@ -64,33 +65,33 @@ class Robot(magicbot.MagicRobot):
             SwerveModule(
                 self.fl_motor, wpilib.VictorSP(4), Translation2d(0.5, 0.5),
                 wpilib.Encoder(12, 13), wpilib.Encoder(0, 1),
-                SwerveModuleConfig(
-                    KS=3, KV=0.23, KA=0, KP_DRIVE=0.1, KI_DRIVE=0,
-                    KD_DRIVE=0.05, KP_TURN=0.2, KI_TURN=0.1, KD_TURN=0.15
+                SwerveModuleConfig(0,
+                    KS=3, KV=0.23, KA=0.12, KP_DRIVE=0.1, KI_DRIVE=0,
+                    KD_DRIVE=0.05, KP_TURN=0.7, KI_TURN=0.1, KD_TURN=0.01
                 )
             ),  # Front-Left
             SwerveModule(
                 self.fr_motor, wpilib.VictorSP(5), Translation2d(0.5, -0.5),
                 wpilib.Encoder(2, 3), wpilib.Encoder(4, 5),
-                SwerveModuleConfig(
-                    KS=3, KV=0.23, KA=0, KP_DRIVE=0.1, KI_DRIVE=0,
-                    KD_DRIVE=0.05, KP_TURN=0.2, KI_TURN=0.1, KD_TURN=0.15
+                SwerveModuleConfig(1,
+                    KS=3, KV=0.23, KA=0.12, KP_DRIVE=0.1, KI_DRIVE=0,
+                    KD_DRIVE=0.05, KP_TURN=0.7, KI_TURN=0.1, KD_TURN=0.01
                 )
             ),  # Front-Right
             SwerveModule(
                 self.rl_motor, wpilib.VictorSP(6), Translation2d(-0.5, 0.5),
                 wpilib.Encoder(6, 7), wpilib.Encoder(8, 9),
-                SwerveModuleConfig(
-                    KS=3, KV=0.23, KA=0, KP_DRIVE=0.1, KI_DRIVE=0,
-                    KD_DRIVE=0.05, KP_TURN=0.2, KI_TURN=0.1, KD_TURN=0.15
+                SwerveModuleConfig(2,
+                    KS=3, KV=0.23, KA=0.12, KP_DRIVE=0.1, KI_DRIVE=0,
+                    KD_DRIVE=0.05, KP_TURN=0.7, KI_TURN=0.1, KD_TURN=0.01
                 )
             ),  # Rear-Left
             SwerveModule(
                 self.rr_motor, wpilib.VictorSP(7), Translation2d(-0.5, -0.5),
                 wpilib.Encoder(14, 15), wpilib.Encoder(10, 11),
-                SwerveModuleConfig(
-                    KS=3, KV=0.23, KA=0, KP_DRIVE=0.1, KI_DRIVE=0,
-                    KD_DRIVE=0.05, KP_TURN=0.2, KI_TURN=0.1, KD_TURN=0.15
+                SwerveModuleConfig(3,
+                    KS=3, KV=0.23, KA=0.12, KP_DRIVE=0.1, KI_DRIVE=0,
+                    KD_DRIVE=0.05, KP_TURN=0.7, KI_TURN=0.1, KD_TURN=0.01
                 )
             )  # Rear-Right
         )
@@ -113,7 +114,7 @@ class Robot(magicbot.MagicRobot):
         """
 
     def disabledInit(self):
-        Follower.load_trajectories(self.PICKLE_FILE)
+        self.follower.load_trajectories(self.PICKLE_FILE)
         super().disabledInit()
 
     def robotPeriodic(self):
@@ -123,7 +124,7 @@ class Robot(magicbot.MagicRobot):
         self.swerve_drive.joystick_move(
             self.joystick_l.getY(),
             self.joystick_l.getX(),
-            self.joystick_r.getX(),
+            -self.joystick_r.getX(),
             field_relative=(Rotation2d.fromDegrees(-self.navx.getAngle()) 
                             if self.field_relative.get() else None)
         )

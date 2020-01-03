@@ -6,7 +6,10 @@ from typing import List, Tuple
 import wpilib
 from ctre import WPI_TalonSRX
 from magicbot import will_reset_to
-from networktables.util import ntproperty
+from networktables import NetworkTables
+from networktables.entry import NetworkTableEntry
+from networktables.util import _NtProperty
+from ntcore.value import Value
 from pathfinder import boundHalfDegrees
 from wpilib.geometry import Rotation2d, Translation2d
 from wpilib.kinematics import ChassisSpeeds
@@ -19,31 +22,54 @@ SwerveModuleList = namedtuple('SwerveModuleList', ['module1', 'module2', 'module
 
 @dataclass(init=False)
 class SwerveModuleConfig:
-    # TODO: These numbers aren't Module specific. Generate them for each instance of SwerveModuleConfig
-    KP_DRIVE = ntproperty('/robot/constants/kp_drive', 0, writeDefault=False)
-    KI_DRIVE = ntproperty('/robot/constants/ki_drive', 0, writeDefault=False)
-    KD_DRIVE = ntproperty('/robot/constants/kd_drive', 0, writeDefault=False)
+    KP_DRIVE: float
+    KI_DRIVE: float
+    KD_DRIVE: float
 
-    KP_TURN = ntproperty('/robot/constants/kp_turn', 0, writeDefault=False)
-    KI_TURN = ntproperty('/robot/constants/ki_turn', 0, writeDefault=False)
-    KD_TURN = ntproperty('/robot/constants/kd_turn', 0, writeDefault=False)
+    KP_TURN: float
+    KI_TURN: float
+    KD_TURN: float
+
+    KEY_PREFIX = '/robot/swerve_module_{}/constants/'
+    # We are using a float factory here because all of the constants should be floats
+    VALUE_CREATOR = Value.getFactory(0.0)
 
     def __init__(
-            self, KS: float, KV: float, KA: float,
+            self, module_num: int, KS: float, KV: float, KA: float,
             KP_DRIVE: float, KI_DRIVE: float, KD_DRIVE: float,
             KP_TURN: float, KI_TURN: float, KD_TURN: float):
+        self.KEY_PREFIX = SwerveModuleConfig.KEY_PREFIX.format(module_num)
+
         self.KS = KS
         self.KV = KV
         self.KA = KA
 
-        self.KP_DRIVE = KP_DRIVE
-        self.KI_DRIVE = KI_DRIVE
-        self.KD_DRIVE = KD_DRIVE
+        self.table = NetworkTables.getTable('/')
 
-        self.KP_TURN = KP_TURN
-        self.KI_TURN = KI_TURN
-        self.KD_TURN = KD_TURN
+        self.KP_DRIVE = self._ntvariable(f'{self.KEY_PREFIX}kp_drive', KP_DRIVE)
+        self.KI_DRIVE = self._ntvariable(f'{self.KEY_PREFIX}ki_drive', KI_DRIVE)
+        self.KD_DRIVE = self._ntvariable(f'{self.KEY_PREFIX}kd_drive', KD_DRIVE)
 
+        self.KP_TURN = self._ntvariable(f'{self.KEY_PREFIX}kp_turn', KP_TURN)
+        self.KI_TURN = self._ntvariable(f'{self.KEY_PREFIX}ki_turn', KI_TURN)
+        self.KD_TURN = self._ntvariable(f'{self.KEY_PREFIX}kd_turn', KD_TURN)
+
+    def _ntvariable(self, key: str, default: float) -> _NtProperty:
+        return _NtProperty(key, default, writeDefault=True, persistent=False)
+
+    def __getattribute__(self, name):
+        if isinstance(object.__getattribute__(self, name), _NtProperty):
+            return object.__getattribute__(self, name).get(None)
+        return object.__getattribute__(self, name)
+
+    def __setattr__(self, name, value):
+        try:
+            if isinstance(object.__getattribute__(self, name), _NtProperty):
+                object.__getattribute__(self, name).set(None, value)
+                return
+        except AttributeError:
+            pass
+        object.__setattr__(self, name, value)
 
 class SwerveModule:
     MOTOR_VOLTAGE = 12
@@ -77,7 +103,7 @@ class SwerveModule:
 
         self.turn_controller = PIDController(config.KP_TURN, config.KI_TURN, config.KD_TURN)
         self.turn_controller.enableContinuousInput(0, 360)
-        self.turn_controller.setIntegratorRange(0, 10)
+        self.turn_controller.setIntegratorRange(0, 30)
 
         if self.drive_encoder is not None:
             self.speed_controller = PIDController(config.KP_DRIVE, config.KI_DRIVE, config.KD_DRIVE)
@@ -107,7 +133,7 @@ class SwerveModule:
         angle_between = abs(new - current)
         angle_between = 360 - angle_between if angle_between > 180 else angle_between
         if angle_between > 90:
-            self._angle = Rotation2d.fromDegrees(new + 180)
+            self._angle = Rotation2d.fromDegrees((new + 180) % 360)
             self.speed *= -1
         else:
             self._angle = rotation
