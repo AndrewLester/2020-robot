@@ -1,16 +1,16 @@
 import math
-from typing import Tuple
 
 import wpilib
 from wpilib.kinematics.swerve import SwerveDriveKinematics, SwerveDriveOdometry, SwerveModuleState
 from wpilib.geometry import Rotation2d, Pose2d
 import navx
 
-from components.drive import SwerveModule, SwerveModuleList
+from components.drive import SwerveModuleList
 
 
 class Odometry:
-    WHEEL_CIRCUMFERENCE = 0.1524 * math.pi # Meters
+    """Tracks the robot's pose as it moves"""
+    WHEEL_CIRCUMFERENCE = 0.1524 * math.pi  # Meters
     TICKS_PER_REV = 1024
 
     modules: SwerveModuleList
@@ -18,13 +18,26 @@ class Odometry:
     navx: navx.AHRS
 
     def setup(self):
-        self.odometry = SwerveDriveOdometry(self.swerve_kinematics, 
+        """Sets up odometry object"""
+        self.odometry = SwerveDriveOdometry(self.swerve_kinematics,
                                             Rotation2d.fromDegrees(-self.navx.getAngle()))
-    
+
     def meters_to_ticks(self, meters: int):
+        """
+        Converts meters to encoder ticks based on the wheel circumference
+
+        :param meters: The number of meters
+        :return: The number of encoder ticks
+        """
         return (self.TICKS_PER_REV / self.WHEEL_CIRCUMFERENCE) * meters
 
     def ticks_to_meters(self, ticks: int):
+        """
+        Converts encoder ticks to meters based on the wheel circumference
+
+        :param ticks: The number of encoder ticks
+        :return: The number of meters
+        """
         return (self.WHEEL_CIRCUMFERENCE / self.TICKS_PER_REV) * ticks
 
     @property
@@ -32,6 +45,7 @@ class Odometry:
         return self.odometry.getPose()
 
     def execute(self):
+        """Updates the odometry object with the new pose"""
         self.odometry.updateWithTime(
             wpilib.Timer.getFPGATimestamp(),
             Rotation2d.fromDegrees(-self.navx.getAngle()),

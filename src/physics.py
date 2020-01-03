@@ -3,15 +3,16 @@ import math
 from pyfrc.physics.core import PhysicsInterface
 from pyfrc.physics import drivetrains
 from wpilib.kinematics import ChassisSpeeds
-from wpilib.kinematics.swerve import SwerveDriveKinematics, SwerveModuleState, SwerveDriveOdometry
+from wpilib.kinematics.swerve import SwerveDriveKinematics, SwerveDriveOdometry
 from wpilib.geometry import Rotation2d, Translation2d
+
 
 class PhysicsEngine:
     """
     Simulates a 4-wheel robot using Swerve Drive joystick control
     """
-    DRIVE_ENCODER_CONSTANT = (1 / 1024) * 0.152 * math.pi # Units meters per tick
-    TURN_ENCODER_CONSTANT = (1 / 256) * 0.1 * math.pi # Units meters per tick
+    DRIVE_ENCODER_CONSTANT = (1 / 1024) * 0.152 * math.pi  # Units meters per tick
+    TURN_ENCODER_CONSTANT = (1 / 256) * 0.1 * math.pi  # Units meters per tick
 
     def __init__(self, physics_controller: PhysicsInterface):
         """
@@ -33,7 +34,8 @@ class PhysicsEngine:
         self.rl_turn_encoder = 0
         self.rr_turn_encoder = 0
 
-        self.odometry = SwerveDriveOdometry(self.kinematics, Rotation2d(self.physics_controller.angle))
+        self.odometry = SwerveDriveOdometry(
+            self.kinematics, Rotation2d(self.physics_controller.angle))
 
     def update_sim(self, hal_data, now, tm_diff):
         """
@@ -76,7 +78,10 @@ class PhysicsEngine:
         )
 
         # Invert vw because Counter-Clockwise needs to be positive
-        speeds = ChassisSpeeds.fromFieldRelativeSpeeds(vx, vy, -vw, Rotation2d(self.physics_controller.angle))
+        speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+            vx, vy, -vw,
+            Rotation2d(self.physics_controller.angle)
+        )
         states = self.kinematics.toSwerveModuleStates(speeds)
         self.odometry.updateWithTime(now,
                                      Rotation2d(self.physics_controller.angle),
@@ -85,6 +90,5 @@ class PhysicsEngine:
         for i, state in enumerate(states):
             hal_data['encoder'][i * 2]['count'] += int(state.speed * tm_diff * (1 / self.DRIVE_ENCODER_CONSTANT))
             hal_data['encoder'][i * 2]['rate'] = state.speed
-
 
         self.physics_controller.vector_drive(vx, vy, vw, tm_diff)

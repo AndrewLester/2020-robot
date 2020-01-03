@@ -1,8 +1,6 @@
 import pickle
-from typing import Tuple
 
 import pathfinder as pf
-import wpilib
 from wpilib.geometry import Pose2d, Rotation2d
 from magicbot import tunable
 
@@ -11,6 +9,7 @@ from components.tracking import Odometry
 
 
 class Follower:
+    """Uses Jaci's pathfinding follower classes to follow a trajectory"""
     TICKS_PER_REV = 1024
     WHEEL_DIAMETER = 0.152  # Meters
 
@@ -23,12 +22,14 @@ class Follower:
     modules: SwerveModuleList
 
     def setup(self):
+        """Sets up distance followers"""
         self.followers = [pf.followers.DistanceFollower(None) for _ in range(4)]
         self.current_trajectory = None
 
     def load_trajectories(self, file_name):
         """
         Load trajectories from a file and store them in the follower
+
         :param file_name: The file to read trajectories from
         """
         try:
@@ -48,10 +49,16 @@ class Follower:
     #                                   self.WHEEL_DIAMETER)
 
     def configurePIDVA(self):
+        """Configures PIDVA constants for the followers"""
         for module, follower in zip(self.modules, self.followers):
             follower.configurePIDVA(self.KP, self.KI, self.KD, module.config.KV, module.config.KA)
 
     def follow_trajectory(self, trajectory_name):
+        """
+        Sets the current trajectory to follow and starts followers
+
+        :param trajectory_name: The name of the trajectory to follow
+        """
         self.current_trajectory = self.generated_trajectories[trajectory_name]
 
         # self.configureEncoders()
@@ -61,6 +68,7 @@ class Follower:
             follower.setTrajectory(self.current_trajectory)
 
     def execute(self):
+        """Uses followers to calculate speeds and angles which are sent to the Swerve Modules"""
         if self.current_trajectory is None:
             return
 
@@ -79,5 +87,5 @@ class Follower:
             heading = pf.r2d(follower.getHeading())
 
             # module.percent = output
-            print(output)
+            print(output, heading)
             # module.angle = heading

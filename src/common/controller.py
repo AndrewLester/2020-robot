@@ -7,10 +7,6 @@
 ----------------------------------------------------------------------------
 """
 
-import hal
-import wpilib
-import math
-
 
 class PIDController:
     """
@@ -31,9 +27,9 @@ class PIDController:
     velocityTolerance = float('inf')
     setpoint = 0
 
-    def __init__(self, Kp: float, Ki: float, Kd: float, period: float=0.02):
+    def __init__(self, Kp: float, Ki: float, Kd: float, period: float = 0.02):
         """
-        Allocates a PIDController with the given constants for Kp, Ki, and Kd and a default period of 
+        Allocates a PIDController with the given constants for Kp, Ki, and Kd and a default period of
         0.02 seconds.
         """
         self.P = Kp
@@ -48,13 +44,13 @@ class PIDController:
 
     def setP(self, Kp: float):
         self.P = Kp
-    
+
     def setI(self, Ki: float):
         self.I = Ki
-    
+
     def setD(self, Kd: float):
         self.D = Kd
-    
+
     def getP(self):
         return self.P
 
@@ -66,7 +62,7 @@ class PIDController:
 
     def getPeriod(self):
         return self.period
-    
+
     def setSetpoint(self, setpoint: float):
         if self.maximumInput > self.minimumInput:
             self.setpoint = max(min(setpoint, self.maximumInput), self.minimumInput)
@@ -75,11 +71,11 @@ class PIDController:
 
     def getSetpoint(self):
         return self.setpoint
-    
+
     def atSetpoint(self):
         return (abs(self.positionError) < self.positionTolerance
                 and abs(self.velocityError) < self.velocityTolerance)
-    
+
     def enableContinuousInput(self, minimumInput, maximumInput):
         self.continuous = True
         self.setInputRange(minimumInput, maximumInput)

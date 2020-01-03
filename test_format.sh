@@ -1,1 +1,1 @@
-flake8 src/ --ignore=E501
+flake8 src/ --ignore=E501,E741,W503,W504
